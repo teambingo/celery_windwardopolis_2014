@@ -162,7 +162,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
     private PlayerAIBase.PlayerOrdersEvent sendOrders;
 
     private PlayerAIBase.PlayerCardEvent playCards;
-
+    
     /**
      * The maximum number of trips allowed before a refill is required.
      */
@@ -310,7 +310,28 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                 if(status == PlayerAIBase.STATUS.UPDATE) {
                     MaybePlayPowerUp();
                     
+                    int K_COFFEE_REFILL_PATH_RATIO_MAX = 6;
                     
+                    Point cfNear =  getNearestCoffeeStore(getMe()).getBusStop();
+                    
+                    double quarterRoadSize = countRoundSize() / (double) 16;
+                    ArrayList<Point> cfPath = CalculatePathPlus1(getMe(), cfNear);
+                    
+                    double cfPathRatio = cfPath.size() / quarterRoadSize;
+                    
+                    if (getMe().getLimo().getPassenger() == null &&
+                    		getMe().getLimo().getCoffeeServings() == 1 &&
+                    		cfPathRatio <= K_COFFEE_REFILL_PATH_RATIO_MAX) {
+                    	pickup = null;
+                    	ptDest = cfNear;
+                    	passengerHunting = null;
+                    }
+                    
+                    DisplayOrders(ptDest);
+                    
+                    path = CalculatePathPlus1(getMe(), ptDest);
+                    
+                    sendOrders.invoke("move", path, pickup);
                     return;
                 }
 
@@ -984,7 +1005,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 			final ArrayList<Point> pPickupDestPath = SimpleAStar.CalculatePath(getGameMap(), passenger.getLobby().getBusStop(), passenger.getDestination().getBusStop());
 			// double halfDiagonal = Math.sqrt(Math.pow(getGameMap().getHeight(), 2) + Math.pow(getGameMap().getWidth(), 2)) / 2;
 			int quarterRoadSize = countRoundSize() / 4;
-
+			
 			// Add deliver points
 			score += passenger.getPointsDelivered() + K_POINTS_DELIVERED;
 
@@ -1024,20 +1045,20 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 
 			return predicts;
 		}
-		
-		private int countRoundSize() {
-			int size = 0;
+    }
+    
+    private int countRoundSize() {
+		int size = 0;
 
-			MapSquare[][] squares = getGameMap().getSquares();
-			for (int x = 0; x < squares.length; x++) {
-				for (int y = 0; y < squares[x].length; y++) {
-					if (squares[x][y].getType() == MapSquare.TYPE.ROAD) {
-						size++;
-					}
+		MapSquare[][] squares = getGameMap().getSquares();
+		for (int x = 0; x < squares.length; x++) {
+			for (int y = 0; y < squares[x].length; y++) {
+				if (squares[x][y].getType() == MapSquare.TYPE.ROAD) {
+					size++;
 				}
 			}
-
-			return size;
 		}
-    }
+
+		return size;
+	}
 }
