@@ -313,6 +313,8 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 //					passengerHunting = pickup.get(0);
 //				}
             } else {
+            	setMe(plyrStatus);
+            	
                 if(status == PlayerAIBase.STATUS.UPDATE) {
                     MaybePlayPowerUp();
                     
