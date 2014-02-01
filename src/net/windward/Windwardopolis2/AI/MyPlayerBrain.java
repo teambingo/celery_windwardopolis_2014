@@ -275,6 +275,8 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
             				System.out.println(plyrStatus.getName() + " picked up " + plyrStatus.getLimo().getPassenger().getName());
             				pickup = AllPickups(getMe(), getPlayers(), getPassengers());
             				ptDest = pickup.get(0).getDestination().getBusStop();
+            				passengerHunting = pickup.get(0);
+            				System.out.println("Pickup (0): " + pickup.get(0).getName());
             				// DMESG
             				System.out.println();
             			}
