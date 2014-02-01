@@ -449,13 +449,6 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 
     				break;
     			}
-    			
-    			if (getMe().getLimo().getPassenger() == null) {
-    				// No passenger, coffee!!
-    				if (getMe().getLimo().getCoffeeServings() == 0) {
-    					ptDest = getNearestCoffeeStore(getMe()).getBusStop();
-    				}
-                }
 
                 // coffee store override
                 switch (status)
@@ -463,17 +456,16 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                     case PASSENGER_DELIVERED_AND_PICKED_UP:
                     case PASSENGER_DELIVERED:
                     case PASSENGER_ABANDONED:
-                        if (getMe().getLimo().getCoffeeServings() <= 0) {
-                            java.util.List<CoffeeStore> cof = getCoffeeStores();
-                            int randCof = rand.nextInt(cof.size());
-                            ptDest = cof.get(randCof).getBusStop();
+            			if (getMe().getLimo().getPassenger() == null) {
+            				// No passenger, coffee!!
+            				if (getMe().getLimo().getCoffeeServings() == 0) {
+            					ptDest = getNearestCoffeeStore(getMe()).getBusStop();
+            				}
                         }
                         break;
                     case PASSENGER_REFUSED_NO_COFFEE:
                     case PASSENGER_DELIVERED_AND_PICK_UP_REFUSED:
-                        java.util.List<CoffeeStore> cof = getCoffeeStores();
-                        int randCof = rand.nextInt(cof.size());
-                        ptDest = cof.get(randCof).getBusStop();
+                    	ptDest = getNearestCoffeeStore(getMe()).getBusStop();
                         break;
                     case COFFEE_STORE_CAR_RESTOCKED:
                         pickup = AllPickups(getMe(), getPlayers(), getPassengers());
