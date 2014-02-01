@@ -13,10 +13,13 @@ import java.awt.Point;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import net.windward.Windwardopolis2.TRAP;
 import net.windward.Windwardopolis2.api.CoffeeStore;
 import net.windward.Windwardopolis2.api.Company;
 import net.windward.Windwardopolis2.api.Map;
@@ -154,7 +157,8 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 
     private void setMyPassenger(Passenger value) { privateMyPassenger = value; }
 
-
+    private PlayerAIBase.STATUS pendingStatus;
+    
     private PlayerAIBase.PlayerOrdersEvent sendOrders;
 
     private PlayerAIBase.PlayerCardEvent playCards;
@@ -227,6 +231,9 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
         }
     }
     
+    
+	private Passenger passengerHunting = null;	// The passenger we are currently GOING for
+	private String prevHuntingDmesg = null;
     /**
      * Called to send an update message to this A.I. We do NOT have to send orders in response.
      *
@@ -253,83 +260,219 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 //        	System.out.println("PLAYERS: " + getPlayers());
 //        	System.out.println("PASSENGERS: " + getPassengers());
         	
+        	Point ptDest = null;
+            java.util.ArrayList<Passenger> pickup = new java.util.ArrayList<Passenger>();
+            ArrayList<Point> path = null;
+        	
         	// bugbug - we return if not us because the below code is only for when we need a new path or our limo hit a bus stop.
             // if you want to act on other players arriving at bus stops, you need to remove this. But make sure you use Me, not
             // plyrStatus for the Player you are updatiing (particularly to determine what tile to start your path from).
-            if (plyrStatus != getMe()) {
-                return;
-            }
+            if (!plyrStatus.equals(getMe())) {
+            	if (pendingStatus != null) {
+					switch (pendingStatus) {
+					case PASSENGER_REFUSED_ENEMY:
+						// DMESG
+						System.out.println("PENDING_REFUSED: " + getMe().getLimo().getPassenger().getName());
 
-            if(status == PlayerAIBase.STATUS.UPDATE) {
-                MaybePlayPowerUp();
-                return;
-            }
+						passengerHunting = null;	// When reach this condition, must having a passenger on board
+						pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+						path = whenRefused(getMe(), getPlayers(), getPassengers(), pickup);
+						// After calling whenRefused, might going to hunt another passenger
 
-            DisplayStatus(status, plyrStatus);
+						// DMESG
+						System.out.println();
+						break;
+					default:
+						break;
+					}
+				}
 
-            if(log.isDebugEnabled())
-                log.info("gameStatus( " + status + " )");
+				if (getMe().getLimo().getPassenger() == null) {
+					pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+					ptDest = pickup.get(0).getLobby().getBusStop();
+					passengerHunting = pickup.get(0);
+				}
+            } else {
+                if(status == PlayerAIBase.STATUS.UPDATE) {
+                    MaybePlayPowerUp();
+                    return;
+                }
 
-            Point ptDest = null;
-            java.util.ArrayList<Passenger> pickup = new java.util.ArrayList<Passenger>();
-            switch (status) {
-                case NO_PATH:
-                case PASSENGER_NO_ACTION:
-                    if (getMe().getLimo().getPassenger() == null) {
-                        pickup = AllPickups(getMe(), getPlayers(), getPassengers());
-                        ptDest = pickup.get(0).getLobby().getBusStop();
-                    } else {
-                        ptDest = getMe().getLimo().getPassenger().getDestination().getBusStop();
-                    }
-                    break;
-                case PASSENGER_DELIVERED:
-                case PASSENGER_ABANDONED:
-                    pickup = AllPickups(getMe(), getPlayers(), getPassengers());
-                    ptDest = pickup.get(0).getLobby().getBusStop();
-                    break;
-                case PASSENGER_REFUSED_ENEMY:
-                    //add in random so no refuse loop
-                    java.util.List<Company> comps = getCompanies();
-                    while(ptDest == null) {
-                        int randCompany = rand.nextInt(comps.size());
-                        if (comps.get(randCompany) != getMe().getLimo().getPassenger().getDestination()) {
-                            ptDest = comps.get(randCompany).getBusStop();
-                            break;
+                DisplayStatus(status, plyrStatus);
+
+                if(log.isDebugEnabled())
+                    log.info("gameStatus( " + status + " )");
+
+    			switch (status) {
+//    			case UPDATE:
+//    				if (pendingStatus != null) {
+//    					switch (pendingStatus) {
+//    					case PASSENGER_REFUSED:
+//    						// DMESG
+//    						System.out.println("PENDING_REFUSED: " + getMe().getLimo().getPassenger().getName());
+    //
+//    						passengerHunting = null;	// When reach this condition, must having a passenger on board
+//    						pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+//    						path = whenRefused(getMe(), getPlayers(), getPassengers(), pickup);
+//    						// After calling whenRefused, might going to hunt another passenger
+    //
+//    						// DMESG
+//    						System.out.println();
+//    						break;
+//    					default:
+//    						break;
+//    					}
+//    				}
+    //
+//    				if (getMe().getLimo().getPassenger() == null) {
+//    					pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+//    					ptDest = pickup.get(0).getLobby().getBusStop();
+//    					passengerHunting = pickup.get(0);
+//    				}
+//    				break;
+    			case NO_PATH:
+    				// DMESG
+    				System.out.println("NO_PATH");
+
+//    				if (getMe().getLimo().getPassenger() == null) {
+//    					pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+//    					ptDest = pickup.get(0).getLobby().getBusStop();
+//    					passengerHunting = pickup.get(0);
+//    				} else {
+//    					ptDest = getMe().getLimo().getPassenger().getDestination().getBusStop();
+//    				}
+    				if (getMe().getLimo().getPassenger() == null) {
+    					pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+
+    					// TODO: Intended for preventing picking up loop
+    					// But seems a little bit buggy?
+    					if (passengerHunting != null) {
+    						for (Passenger pp : pickup) {
+    							if (!pp.equals(passengerHunting)) {
+    								ptDest = pp.getLobby().getBusStop();
+    								passengerHunting = pp;
+    							}
+    						}
+    					} else {
+    						ptDest = pickup.get(0).getLobby().getBusStop();
+    						passengerHunting = pickup.get(0);
+    					}
+    				} else {
+    					ptDest = getMe().getLimo().getPassenger().getDestination().getBusStop();
+    				}
+
+    				// DMESG
+    				System.out.println();
+
+    				break;
+    			case PASSENGER_NO_ACTION:
+    				// DMESG
+    				System.out.println("NO_ACTION");
+
+    				if (getMe().getLimo().getPassenger() == null) {
+    					pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+
+    					// TODO: Intended for preventing picking up loop
+    					// But seems a little bit buggy?
+    					if (passengerHunting != null) {
+    						for (Passenger pp : pickup) {
+    							if (!pp.equals(passengerHunting)) {
+    								ptDest = pp.getLobby().getBusStop();
+    								passengerHunting = pp;
+    							}
+    						}
+    					} else {
+    						ptDest = pickup.get(0).getLobby().getBusStop();
+    						passengerHunting = pickup.get(0);
+    					}
+    				} else {
+    					ptDest = getMe().getLimo().getPassenger().getDestination().getBusStop();
+    				}
+
+    				// DMESG
+    				System.out.println();
+
+    				break;
+    			case PASSENGER_DELIVERED:
+    			case PASSENGER_ABANDONED:
+    				pendingStatus = status;
+
+    				// DMESG
+    				System.out.println("DELIVERED/ABANDONED (NO_PICK_UP)");
+
+    				passengerHunting = null;
+    				pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+    				ptDest = pickup.get(0).getLobby().getBusStop();
+    				passengerHunting = pickup.get(0);
+
+    				// DMESG
+    				System.out.println();
+
+    				break;
+    			case PASSENGER_REFUSED_ENEMY:
+    				pendingStatus = status;
+
+    				// DMESG
+    				System.out.println("REFUSED: " + getMe().getLimo().getPassenger().getName());
+
+    				passengerHunting = null;	// When reach this condition, must having a passenger on board
+    				pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+    				path = whenRefused(getMe(), getPlayers(), getPassengers(), pickup);
+    				// After calling whenRefused, might going to hunt another passenger
+
+    				// DMESG
+    				System.out.println();
+
+    				break;
+    			case PASSENGER_DELIVERED_AND_PICKED_UP:
+    				// DMESG
+    				System.out.println("DELIVERED");
+
+    			case PASSENGER_PICKED_UP:
+    				pendingStatus = status;
+
+    				// DMESG
+    				System.out.println("PICKED_UP: "
+    						+ getMe().getLimo().getPassenger().getName()
+    						+ " TOWARDS "
+    						+ getMe().getLimo().getPassenger().getDestination().getName());
+
+    				passengerHunting = null;
+    				pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+    				ptDest = getMe().getLimo().getPassenger().getDestination()
+    						.getBusStop();
+
+    				// DMESG
+    				System.out.println();
+
+    				break;
+    			}
+
+                // coffee store override
+                switch (status)
+                {
+                    case PASSENGER_DELIVERED_AND_PICKED_UP:
+                    case PASSENGER_DELIVERED:
+                    case PASSENGER_ABANDONED:
+                        if (getMe().getLimo().getCoffeeServings() <= 0) {
+                            java.util.List<CoffeeStore> cof = getCoffeeStores();
+                            int randCof = rand.nextInt(cof.size());
+                            ptDest = cof.get(randCof).getBusStop();
                         }
-                    }
-                    break;
-                case PASSENGER_DELIVERED_AND_PICKED_UP:
-                case PASSENGER_PICKED_UP:
-                    pickup = AllPickups(getMe(), getPlayers(), getPassengers());
-                    ptDest = getMe().getLimo().getPassenger().getDestination().getBusStop();
-                    break;
-
-            }
-
-            // coffee store override
-            switch (status)
-            {
-                case PASSENGER_DELIVERED_AND_PICKED_UP:
-                case PASSENGER_DELIVERED:
-                case PASSENGER_ABANDONED:
-                    if (getMe().getLimo().getCoffeeServings() <= 0) {
+                        break;
+                    case PASSENGER_REFUSED_NO_COFFEE:
+                    case PASSENGER_DELIVERED_AND_PICK_UP_REFUSED:
                         java.util.List<CoffeeStore> cof = getCoffeeStores();
                         int randCof = rand.nextInt(cof.size());
                         ptDest = cof.get(randCof).getBusStop();
-                    }
-                    break;
-                case PASSENGER_REFUSED_NO_COFFEE:
-                case PASSENGER_DELIVERED_AND_PICK_UP_REFUSED:
-                    java.util.List<CoffeeStore> cof = getCoffeeStores();
-                    int randCof = rand.nextInt(cof.size());
-                    ptDest = cof.get(randCof).getBusStop();
-                    break;
-                case COFFEE_STORE_CAR_RESTOCKED:
-                    pickup = AllPickups(getMe(), getPlayers(), getPassengers());
-                    if (pickup.size() == 0)
                         break;
-                    ptDest = pickup.get(0).getLobby().getBusStop();
-                    break;
+                    case COFFEE_STORE_CAR_RESTOCKED:
+                        pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+                        if (pickup.size() == 0)
+                            break;
+                        ptDest = pickup.get(0).getLobby().getBusStop();
+                        break;
+                }	
             }
 
             // may be another status
@@ -339,7 +482,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
             DisplayOrders(ptDest);
 
             // get the path from where we are to the dest.
-            java.util.ArrayList<Point> path = CalculatePathPlus1(getMe(), ptDest);
+            path = CalculatePathPlus1(getMe(), ptDest);
 
             if (log.isDebugEnabled())
             {
@@ -517,6 +660,160 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                 log.info(msg);
         }
     }
+    
+	private ArrayList<Point> whenRefused(Player me, ArrayList<Player> players,
+			ArrayList<Passenger> passengers, ArrayList<Passenger> pickup) {
+		Passenger currentPassenger = me.getLimo().getPassenger();
+
+		boolean enemyHasGone = true;
+		for (Passenger passenger : currentPassenger.getDestination().getPassengers()) {
+			if (currentPassenger.getEnemies().indexOf(passenger) >= 0) {
+				enemyHasGone = false;
+				break;
+			}
+		}
+
+		if (enemyHasGone) {
+			// DMESG
+			System.out.println("ENEMY GONE");
+
+			passengerHunting = null;	// enemy gone, deliver current passenger, stop hunting
+			return CalculatePathPlus1(me, currentPassenger.getDestination().getBusStop());
+		}
+
+		Company noWaitCompany = null;
+		boolean noWait = true;
+
+		if (pickup.size() > 0) {
+			// Pick somebody else
+			for (int i = 0; i < pickup.size(); i++) {
+				if (currentPassenger.getEnemies().indexOf(pickup.get(i)) < 0) {
+					passengerHunting = pickup.get(i);
+					noWaitCompany = pickup.get(i).getLobby();
+
+					// DMESG
+					System.out.println("pick up: " + pickup.get(i).getName());
+					break;
+				}
+			}
+		} else {
+			// Dump to closest
+			passengerHunting = null;
+
+			// DMESG
+			System.out.println("dump to closest");
+
+			Company closestCompany = null;
+			for (Company company : getCompanies()) {
+				if (!company.equals(currentPassenger.getDestination())) {
+					if (closestCompany == null) {
+						closestCompany = company;
+					}
+
+					if (CalculatePathPlus1(getMe(), company.getBusStop()).size()
+							< CalculatePathPlus1(getMe(), closestCompany.getBusStop()).size()) {
+						closestCompany = company;
+					}
+				}
+			}
+			noWaitCompany = closestCompany;
+		}
+
+		// It's a bug if noWaitCompany is null
+		if (noWaitCompany == null) {
+			TRAP.trap();
+		}
+
+		for (Player player : players) {
+			if (!player.equals(getMe()) && isPickingUpEnemy(player, currentPassenger)) {
+				ArrayList<Point> playerPath = CalculatePathPlus1(player, currentPassenger.getDestination().getBusStop());
+				ArrayList<Point> mePath = CalculatePathPlus1(getMe(), noWaitCompany.getBusStop());
+
+				if (playerPath.size() < mePath.size()) {
+					noWait = false;
+					break;
+				}
+			}
+		}
+
+		if (noWait) {
+			// Don't wait, dump current passenger
+
+			// DMESG
+			System.out.println("DUMP AT " + noWaitCompany.getName());
+
+			return CalculatePathPlus1(me, noWaitCompany.getBusStop());
+		} else {
+			// Wander around, wait for enemy leave
+			passengerHunting = null;	// just wandering around, definitely not hunting
+
+			// DMESG
+			System.out.println("WANDER AROUND");
+
+			ArrayList<Point> totalPath = new ArrayList<Point>();
+			ArrayList<Point> singlePath = SimpleAStar.CalculatePath(getGameMap(), getMe().getLimo().getMapPosition(), currentPassenger.getDestination().getBusStop());
+			ArrayList<Point> reverseSinglePath = new ArrayList<Point>(singlePath);
+			Collections.reverse(reverseSinglePath);
+			for (int i = 0; i < 100; i++) {
+				// Loop 100 times
+				totalPath.addAll(singlePath);
+				totalPath.addAll(reverseSinglePath);
+			}
+
+			return totalPath;
+		}
+	}
+	
+	private boolean isPickingUpEnemy(Player player, Passenger currentPassenger) {
+		if (player.getPickUp().size() <= 0) {
+			return false;
+		}
+
+		Passenger playerFirstPickup = player.getPickUp().get(0);
+		if (playerFirstPickup.getLobby() == null) {
+			return false;
+		}
+
+		boolean isPickingUpEnemy = currentPassenger.getEnemies().indexOf(playerFirstPickup) >= 0;
+		if (!isPickingUpEnemy) {
+			return false;
+		}
+
+		if (player.getLimo().getPassenger() != null) {
+			// Has passenger
+			// TODO: fix?
+			// Assuming players will deliver their passengers to dest
+			boolean isPassengerToDest = player.getLimo().getPassenger().equals(currentPassenger.getDestination());
+			if (!isPassengerToDest) {
+				return false;
+			}
+
+			boolean isPassengerEnemy = currentPassenger.getEnemies().indexOf(player.getLimo().getPassenger()) >= 0;
+			if (isPassengerEnemy) {
+				return false;
+			}
+
+			boolean isPassengerRefusing = false;
+			List<Passenger> playerPassengerEnemies = player.getLimo().getPassenger().getEnemies();
+			for (Passenger waitingPassenger : currentPassenger.getDestination().getPassengers()) {
+				if (playerPassengerEnemies.indexOf(waitingPassenger) >= 0) {
+					isPassengerRefusing = true;
+					break;
+				}
+			}
+			if (isPassengerRefusing) {
+				return false;
+			}
+		} else {
+			// No passenger
+			boolean isPickingUpAtDest = playerFirstPickup.getLobby().equals(currentPassenger.getDestination());
+			if (!isPickingUpAtDest) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 
     private java.util.ArrayList<Point> CalculatePathPlus1(Player me, Point ptDest) {
         java.util.ArrayList<Point> path = SimpleAStar.CalculatePath(getGameMap(), me.getLimo().getMapPosition(), ptDest);
