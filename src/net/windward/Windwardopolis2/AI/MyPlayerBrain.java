@@ -264,7 +264,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
             java.util.ArrayList<Passenger> pickup = new java.util.ArrayList<Passenger>();
             ArrayList<Point> path = null;
         	
-            if (getMe().getLimo().getPassenger() == null) {
+            if (getMe().getLimo().getPassenger() == null && getMe().getLimo().getCoffeeServings()>0) {
             	pickup = AllPickups(getMe(), getPlayers(), getPassengers());
             	ptDest = pickup.get(0).getLobby().getBusStop();
             	passengerHunting = pickup.get(0);
@@ -521,6 +521,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 				// No passenger, coffee!!
 				if (getMe().getLimo().getCoffeeServings() == 0) {
 					ptDest = getNearestCoffeeStore(getMe()).getBusStop();
+					passengerHunting = null;
 				}
             }
 //            // may be another status
