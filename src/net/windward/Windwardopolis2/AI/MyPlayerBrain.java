@@ -327,11 +327,12 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                     	passengerHunting = null;
                     }
                     
-                    DisplayOrders(ptDest);
-                    
-                    path = CalculatePathPlus1(getMe(), ptDest);
-                    
-                    sendOrders.invoke("move", path, pickup);
+                    if (ptDest != null) {
+                    	DisplayOrders(ptDest);
+                    	path = CalculatePathPlus1(getMe(), ptDest);
+                    	sendOrders.invoke("move", path, pickup);
+                    }
+
                     return;
                 }
 
@@ -984,7 +985,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 		// Multipliers and constants
 		private static final int K_POINTS_DELIVERED = 6;
 		private static final int M_DISTANCE_PENALTY = -5;
-		private static final int K_OTHERS_AHEAD = -10; // Other players are ahead of us
+		private static final int K_OTHERS_AHEAD = -100; // Other players are ahead of us
 
 		public PassengerPrioryComparator(Player me, ArrayList<Player> players) {
 			this.me = me;
