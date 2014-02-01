@@ -804,7 +804,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 		if (pickup.size() > 0) {
 			// Pick somebody else
 			for (int i = 0; i < pickup.size(); i++) {
-				if (currentPassenger.getEnemies().indexOf(pickup.get(i)) < 0) {
+				if (currentPassenger.getEnemies().indexOf(pickup.get(i)) < 0 && !pickup.get(i).getLobby().equals(currentPassenger.getDestination())) {
 					passengerHunting = pickup.get(i);
 					noWaitCompany = pickup.get(i).getLobby();
 
