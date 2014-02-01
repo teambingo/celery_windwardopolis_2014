@@ -656,6 +656,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
             playCards.invoke(PlayerAIBase.CARD_ACTION.DISCARD, pu2);
         else
         {
+        	boolean useCard = true;
             if (pu2.getCard() == PowerUp.CARD.MOVE_PASSENGER) {
                 Passenger toUseCardOn = null;
                 
@@ -701,9 +702,19 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                 System.out.println("TOP PLAYER: " + plyrsWithPsngrs.get(0).getName());
                 pu2.setPlayer(plyrsWithPsngrs.get(0));
             }
-            if (log.isInfoEnabled())
-                log.info("Request play card " + pu2);
-            playCards.invoke(PlayerAIBase.CARD_ACTION.PLAY, pu2);
+            if (pu2.getCard() == PowerUp.CARD.MULT_DELIVERING_PASSENGER || pu2.getCard() == PowerUp.CARD.MULT_DELIVER_AT_COMPANY){
+            	useCard=false;
+            }
+            if (pu2.getCard() == PowerUp.CARD.RELOCATE_ALL_CARS || pu2.getCard() == PowerUp.CARD.RELOCATE_ALL_PASSENGERS){
+            	useCard = false;
+            }
+            
+            	
+            if(useCard){
+//	            if (log.isInfoEnabled())
+	            System.out.println("Request play card " + pu2);
+	            playCards.invoke(PlayerAIBase.CARD_ACTION.PLAY, pu2);
+            }
         }
         privatePowerUpHand.remove(pu2);
     }
