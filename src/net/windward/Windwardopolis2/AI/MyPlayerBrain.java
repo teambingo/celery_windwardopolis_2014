@@ -264,7 +264,11 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
             java.util.ArrayList<Passenger> pickup = new java.util.ArrayList<Passenger>();
             ArrayList<Point> path = null;
         	
-            
+            if (getMe().getLimo().getPassenger() == null) {
+            	pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+            	ptDest = pickup.get(0).getLobby().getBusStop();
+            	passengerHunting = pickup.get(0);
+            }
             
         	// bugbug - we return if not us because the below code is only for when we need a new path or our limo hit a bus stop.
             // if you want to act on other players arriving at bus stops, you need to remove this. But make sure you use Me, not
