@@ -292,7 +292,8 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 					switch (pendingStatus) {
 					case PASSENGER_REFUSED_ENEMY:
 						// DMESG
-						System.out.println("PENDING_REFUSED: " + getMe().getLimo().getPassenger().getName());
+						if (getMe().getLimo().getPassenger()!=null)
+							System.out.println("PENDING_REFUSED: " + getMe().getLimo().getPassenger().getName());
 
 						passengerHunting = null;	// When reach this condition, must having a passenger on board
 						pickup = AllPickups(getMe(), getPlayers(), getPassengers());
@@ -318,28 +319,28 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                 if(status == PlayerAIBase.STATUS.UPDATE) {
                     MaybePlayPowerUp();
                     
-                    int K_COFFEE_REFILL_PATH_RATIO_MAX = 6;
-                    
-                    Point cfNear =  getNearestCoffeeStore(getMe()).getBusStop();
-                    
-                    double quarterRoadSize = countRoundSize() / (double) 16;
-                    ArrayList<Point> cfPath = CalculatePathPlus1(getMe(), cfNear);
-                    
-                    double cfPathRatio = cfPath.size() / quarterRoadSize;
-                    
-                    if (getMe().getLimo().getPassenger() == null &&
-                    		getMe().getLimo().getCoffeeServings() == 1 &&
-                    		cfPathRatio <= K_COFFEE_REFILL_PATH_RATIO_MAX) {
-                    	pickup = null;
-                    	ptDest = cfNear;
-                    	passengerHunting = null;
-                    }
-                    
-                    if (ptDest != null) {
-                    	DisplayOrders(ptDest);
-                    	path = CalculatePathPlus1(getMe(), ptDest);
-                    	sendOrders.invoke("move", path, pickup);
-                    }
+//                    int K_COFFEE_REFILL_PATH_RATIO_MAX = 6;
+//                    
+//                    Point cfNear =  getNearestCoffeeStore(getMe()).getBusStop();
+//                    
+//                    double quarterRoadSize = countRoundSize() / (double) 16;
+//                    ArrayList<Point> cfPath = CalculatePathPlus1(getMe(), cfNear);
+//                    
+//                    double cfPathRatio = cfPath.size() / quarterRoadSize;
+//                    
+//                    if (getMe().getLimo().getPassenger() == null &&
+//                    		getMe().getLimo().getCoffeeServings() == 1 &&
+//                    		cfPathRatio <= K_COFFEE_REFILL_PATH_RATIO_MAX) {
+//                    	pickup = null;
+//                    	ptDest = cfNear;
+//                    	passengerHunting = null;
+//                    }
+//                    
+//                    if (ptDest != null) {
+//                    	DisplayOrders(ptDest);
+//                    	path = CalculatePathPlus1(getMe(), ptDest);
+//                    	sendOrders.invoke("move", path, pickup);
+//                    }
 
                     return;
                 }
