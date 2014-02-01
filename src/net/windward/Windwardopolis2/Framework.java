@@ -29,7 +29,7 @@ public class Framework implements IPlayerCallback {
     private TcpClient tcpClient;
     private MyPlayerBrain brain;
 //    private String ipAddress = "127.0.0.1";
-    private String ipAddress = "k9-13.cs.purdue.edu";
+    private String ipAddress = "k9-14.cs.purdue.edu";
 
     private String myGuid;
 

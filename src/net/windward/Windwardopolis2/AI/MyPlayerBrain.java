@@ -624,6 +624,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
     }
 
     private void MaybePlayPowerUp() {
+    	System.out.println("Called Power Up");
         if ((getPowerUpHand().size() != 0) && (rand.nextInt(50) < 30))
             return;
         // not enough, draw
@@ -639,7 +640,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
             }
             return;
         }
-
+        System.out.println("getPowerUpDeck: " + getPowerUpDeck());
         // can we play one?
         PowerUp pu2 = null;
         for(PowerUp current : getPowerUpHand()) {
@@ -648,14 +649,15 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                 break;
             }
         }
-
+        System.out.println("Current card: " + pu2);
         if (pu2 == null)
             return;
         // 10% discard, 90% play
-        if (rand.nextInt(10) == 0)
-            playCards.invoke(PlayerAIBase.CARD_ACTION.DISCARD, pu2);
-        else
-        {
+//        if (rand.nextInt(10) == 0)
+//            playCards.invoke(PlayerAIBase.CARD_ACTION.DISCARD, pu2);
+//        else
+        //{
+        	
         	boolean useCard = true;
             if (pu2.getCard() == PowerUp.CARD.MOVE_PASSENGER) {
                 Passenger toUseCardOn = null;
@@ -715,7 +717,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 	            System.out.println("Request play card " + pu2);
 	            playCards.invoke(PlayerAIBase.CARD_ACTION.PLAY, pu2);
             }
-        }
+        //}
         privatePowerUpHand.remove(pu2);
     }
 
