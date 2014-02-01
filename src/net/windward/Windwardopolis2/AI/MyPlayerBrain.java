@@ -476,31 +476,72 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                 }	
             }
 
-            // may be another status
-            if(ptDest == null)
-                return;
-
+//            // may be another status
+//            if(ptDest == null)
+//                return;
+//
+//            DisplayOrders(ptDest);
+//
+//            // get the path from where we are to the dest.
+//            path = CalculatePathPlus1(getMe(), ptDest);
+//
+//            if (log.isDebugEnabled())
+//            {
+//                log.debug(status + "; Path:" + (path.size() > 0 ? path.get(0).toString() : "{n/a}") + "-" + (path.size() > 0 ? path.get(path.size()-1).toString() : "{n/a}") + ", " + path.size() + " steps; Pickup:" + (pickup.size() == 0 ? "{none}" : pickup.get(0).getName()) + ", " + pickup.size() + " total");
+//            }
+//
+//            // update our saved Player to match new settings
+//            if (path.size() > 0) {
+//                getMe().getLimo().getPath().clear();
+//                getMe().getLimo().getPath().addAll(path);
+//            }
+//            if (pickup.size() > 0) {
+//                getMe().getPickUp().clear();
+//                getMe().getPickUp().addAll(pickup);
+//            }
+//
+//            sendOrders.invoke("move", path, pickup);
+            
             DisplayOrders(ptDest);
+            
+            // DMESG
+			String curHuntingDmesg = "HUNTING: " + (passengerHunting != null ? passengerHunting.getName() : "<null>");
+			if (prevHuntingDmesg == null || !prevHuntingDmesg.equals(curHuntingDmesg)) {
+				System.out.println(curHuntingDmesg);
+				prevHuntingDmesg = curHuntingDmesg;
+			}
 
-            // get the path from where we are to the dest.
-            path = CalculatePathPlus1(getMe(), ptDest);
+			if (pickup.size() > 0) {
+				getMe().getPickUp().clear();
+				getMe().getPickUp().addAll(pickup);
+			}
 
-            if (log.isDebugEnabled())
-            {
-                log.debug(status + "; Path:" + (path.size() > 0 ? path.get(0).toString() : "{n/a}") + "-" + (path.size() > 0 ? path.get(path.size()-1).toString() : "{n/a}") + ", " + path.size() + " steps; Pickup:" + (pickup.size() == 0 ? "{none}" : pickup.get(0).getName()) + ", " + pickup.size() + " total");
-            }
+			// Accept path as higher priory because of whenRefused function
+			// Otherwise, it might cause some bugs (not confirmed)
+			if (path != null) {
+				// update our saved Player to match new settings
+				if (path.size() > 0) {
+					getMe().getLimo().getPath().clear();
+					getMe().getLimo().getPath().addAll(path);
+				}
 
-            // update our saved Player to match new settings
-            if (path.size() > 0) {
-                getMe().getLimo().getPath().clear();
-                getMe().getLimo().getPath().addAll(path);
-            }
-            if (pickup.size() > 0) {
-                getMe().getPickUp().clear();
-                getMe().getPickUp().addAll(pickup);
-            }
+				sendOrders.invoke("move", path, pickup);
+				return;
+			}
 
-            sendOrders.invoke("move", path, pickup);
+			if (ptDest != null) {
+				// get the path from where we are to the dest.
+				path = CalculatePathPlus1(getMe(), ptDest);
+
+				// update our saved Player to match new settings
+				if (path.size() > 0) {
+					getMe().getLimo().getPath().clear();
+					getMe().getLimo().getPath().addAll(path);
+				}
+
+				sendOrders.invoke("move", path, pickup);
+				return;
+			}
         } catch (RuntimeException ex) {
             ex.printStackTrace();
         }
