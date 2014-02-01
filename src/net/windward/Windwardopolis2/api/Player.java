@@ -237,4 +237,10 @@ public class Player
 	{
 		return String.format("%1$s; NumDelivered:%2$s", getName(), getPassengersDelivered().size());
 	}
+	
+	@Override
+	public boolean equals(Object o) {
+		Player p = (Player) o;
+		return this.privateGuid.equals(p.getGuid());
+	}
 }

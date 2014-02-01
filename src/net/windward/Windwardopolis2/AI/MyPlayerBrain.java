@@ -9,16 +9,23 @@
 
 package net.windward.Windwardopolis2.AI;
 
-import net.windward.Windwardopolis2.api.*;
-import org.apache.log4j.Logger;
-
-import java.awt.*;
-import java.io.File;
-import java.io.FileInputStream;
+import java.awt.Point;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import net.windward.Windwardopolis2.api.CoffeeStore;
+import net.windward.Windwardopolis2.api.Company;
+import net.windward.Windwardopolis2.api.Map;
+import net.windward.Windwardopolis2.api.MapSquare;
+import net.windward.Windwardopolis2.api.Passenger;
+import net.windward.Windwardopolis2.api.Player;
+import net.windward.Windwardopolis2.api.PowerUp;
+
+import org.apache.log4j.Logger;
 
 /**
  * The sample C# AI. Start with this project but write your own code as this is a very simplistic implementation of the AI.
@@ -208,7 +215,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
             sendOrders = ordersEvent;
             playCards = cardEvent;
 
-            java.util.ArrayList<Passenger> pickup = AllPickups(me, passengers);
+            java.util.ArrayList<Passenger> pickup = AllPickups(me, players, passengers);
 
             // get the path from where we are to the dest.
             java.util.ArrayList<Point> path = CalculatePathPlus1(me, pickup.get(0).getLobby().getBusStop());
@@ -219,7 +226,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 
         }
     }
-
+    
     /**
      * Called to send an update message to this A.I. We do NOT have to send orders in response.
      *
@@ -233,7 +240,20 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
         // then you need to split these out and synchronize access to the saved list objects.
 
         try {
-            // bugbug - we return if not us because the below code is only for when we need a new path or our limo hit a bus stop.
+//        	ArrayList<Player> players = new ArrayList<Player>(getPlayers());	
+//        	for (int i = 0; i < players.size(); i++) {
+//        		if (players.get(i).equals(plyrStatus)) {
+//        			players.set(i, plyrStatus);
+//        			privatePlayers = players;
+//        			break;
+//        		}
+//        	}
+        	
+//        	log.info(getPlayers().toString());
+//        	System.out.println("PLAYERS: " + getPlayers());
+//        	System.out.println("PASSENGERS: " + getPassengers());
+        	
+        	// bugbug - we return if not us because the below code is only for when we need a new path or our limo hit a bus stop.
             // if you want to act on other players arriving at bus stops, you need to remove this. But make sure you use Me, not
             // plyrStatus for the Player you are updatiing (particularly to determine what tile to start your path from).
             if (plyrStatus != getMe()) {
@@ -256,7 +276,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                 case NO_PATH:
                 case PASSENGER_NO_ACTION:
                     if (getMe().getLimo().getPassenger() == null) {
-                        pickup = AllPickups(plyrStatus, getPassengers());
+                        pickup = AllPickups(getMe(), getPlayers(), getPassengers());
                         ptDest = pickup.get(0).getLobby().getBusStop();
                     } else {
                         ptDest = getMe().getLimo().getPassenger().getDestination().getBusStop();
@@ -264,7 +284,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                     break;
                 case PASSENGER_DELIVERED:
                 case PASSENGER_ABANDONED:
-                    pickup = AllPickups(getMe(), getPassengers());
+                    pickup = AllPickups(getMe(), getPlayers(), getPassengers());
                     ptDest = pickup.get(0).getLobby().getBusStop();
                     break;
                 case PASSENGER_REFUSED_ENEMY:
@@ -280,7 +300,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                     break;
                 case PASSENGER_DELIVERED_AND_PICKED_UP:
                 case PASSENGER_PICKED_UP:
-                    pickup = AllPickups(getMe(), getPassengers());
+                    pickup = AllPickups(getMe(), getPlayers(), getPassengers());
                     ptDest = getMe().getLimo().getPassenger().getDestination().getBusStop();
                     break;
 
@@ -305,7 +325,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                     ptDest = cof.get(randCof).getBusStop();
                     break;
                 case COFFEE_STORE_CAR_RESTOCKED:
-                    pickup = AllPickups(getMe(), getPassengers());
+                    pickup = AllPickups(getMe(), getPlayers(), getPassengers());
                     if (pickup.size() == 0)
                         break;
                     ptDest = pickup.get(0).getLobby().getBusStop();
@@ -507,15 +527,136 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
         return path;
     }
 
-    private static java.util.ArrayList<Passenger> AllPickups(Player me, Iterable<Passenger> passengers) {
-        java.util.ArrayList<Passenger> pickup = new java.util.ArrayList<Passenger>();
+//    private static java.util.ArrayList<Passenger> AllPickups(Player me, Iterable<Passenger> passengers) {
+//        java.util.ArrayList<Passenger> pickup = new java.util.ArrayList<Passenger>();
+//
+//        for (Passenger psngr : passengers) {
+//            if ((!me.getPassengersDelivered().contains(psngr)) && (psngr != me.getLimo().getPassenger()) && (psngr.getCar() == null) && (psngr.getLobby() != null) && (psngr.getDestination() != null))
+//                pickup.add(psngr);
+//        }
+//
+//        //add sort by random so no loops for can't pickup
+//        return pickup;
+//    }
+    private ArrayList<Passenger> AllPickups(Player me,
+			ArrayList<Player> players, Iterable<Passenger> passengers) {
+		PassengerPrioryComparator pComparator = new PassengerPrioryComparator(me, players);
+		ArrayList<Passenger> pickup = new ArrayList<Passenger>();
+		SortedSet<Passenger> sortedPickup = new TreeSet<Passenger>(pComparator);
 
-        for (Passenger psngr : passengers) {
-            if ((!me.getPassengersDelivered().contains(psngr)) && (psngr != me.getLimo().getPassenger()) && (psngr.getCar() == null) && (psngr.getLobby() != null) && (psngr.getDestination() != null))
-                pickup.add(psngr);
-        }
+		for (Passenger psngr : passengers) {
+			if ((!me.getPassengersDelivered().contains(psngr))
+					&& (psngr != me.getLimo().getPassenger())
+					&& (psngr.getCar() == null) && (psngr.getLobby() != null)
+					&& (psngr.getDestination() != null))
+				sortedPickup.add(psngr);
+		}
 
-        //add sort by random so no loops for can't pickup
-        return pickup;
+		for (Passenger psngr : sortedPickup) {
+			pickup.add(psngr);
+		}
+
+		// DMESG
+		StringBuilder dmesgSb = new StringBuilder();
+		dmesgSb.append("AllPickups: ");
+		dmesgSb.append("[");
+		for (Passenger pp : pickup) {
+			dmesgSb.append(pp.getName());
+			dmesgSb.append(" (");
+			dmesgSb.append(pComparator.getScore(pp));
+			dmesgSb.append("), ");
+		}
+		dmesgSb.delete(dmesgSb.length() - 2, dmesgSb.length());
+		dmesgSb.append("]");
+		System.out.println(dmesgSb.toString());
+
+		return pickup;
+	}
+    
+    private class PassengerPrioryComparator implements Comparator<Passenger> {
+		private final Player me;
+		private final ArrayList<Player> players;
+
+		// Multipliers and constants
+		private static final int K_POINTS_DELIVERED = 6;
+		private static final int M_DISTANCE_PENALTY = -5;
+		private static final int K_OTHERS_AHEAD = -10; // Other players are ahead of us
+
+		public PassengerPrioryComparator(Player me, ArrayList<Player> players) {
+			this.me = me;
+			this.players = players;
+		}
+
+		@Override
+		public int compare(Passenger p1, Passenger p2) {
+			int p1p = getScore(p1);
+			int p2p = getScore(p2);
+
+			// Higher score first
+			return p2p - p1p;
+		}
+
+		public int getScore(Passenger passenger) {
+			int score = 0;
+
+			final ArrayList<Point> pPath = SimpleAStar.CalculatePath(getGameMap(), me.getLimo().getMapPosition(), passenger.getLobby().getBusStop());
+			final ArrayList<Point> pPickupDestPath = SimpleAStar.CalculatePath(getGameMap(), passenger.getLobby().getBusStop(), passenger.getDestination().getBusStop());
+			// double halfDiagonal = Math.sqrt(Math.pow(getGameMap().getHeight(), 2) + Math.pow(getGameMap().getWidth(), 2)) / 2;
+			int quarterRoadSize = countRoundSize() / 4;
+
+			// Add deliver points
+			score += passenger.getPointsDelivered() + K_POINTS_DELIVERED;
+
+			// Based on current distance and delivery distance
+			double baseDistance = quarterRoadSize;
+			score += ((pPath.size() + pPickupDestPath.size()) / baseDistance) * M_DISTANCE_PENALTY;
+
+			// Based on other players' pickups
+			ArrayList<ArrayList<Point>> pPredictPaths = predictOthersPaths(passenger);
+			for (ArrayList<Point> pPredictPath : pPredictPaths) {
+				if (pPredictPath.size() < pPredictPaths.size()) {
+					score += K_OTHERS_AHEAD;
+					break;
+				}
+			}
+
+			return score;
+		}
+		
+		private ArrayList<ArrayList<Point>> predictOthersPaths(Passenger p) {
+			ArrayList<ArrayList<Point>> predicts = new ArrayList<ArrayList<Point>>();
+
+			if (players == null) {
+				return predicts;
+			}
+
+			for (Player player : players) {
+				if (player != null && !player.equals(getMe())
+						&& player.getLimo().getPassenger() == null
+						&& player.getPickUp() != null
+						&& player.getPickUp().size() > 0
+						&& player.getPickUp().get(0) == p) {
+					ArrayList<Point> path = SimpleAStar.CalculatePath(getGameMap(), player.getLimo().getMapPosition(), p.getLobby().getBusStop());
+					predicts.add(path);
+				}
+			}
+
+			return predicts;
+		}
+		
+		private int countRoundSize() {
+			int size = 0;
+
+			MapSquare[][] squares = getGameMap().getSquares();
+			for (int x = 0; x < squares.length; x++) {
+				for (int y = 0; y < squares[x].length; y++) {
+					if (squares[x][y].getType() == MapSquare.TYPE.ROAD) {
+						size++;
+					}
+				}
+			}
+
+			return size;
+		}
     }
 }
