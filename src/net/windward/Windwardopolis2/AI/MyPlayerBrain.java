@@ -264,6 +264,8 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
             java.util.ArrayList<Passenger> pickup = new java.util.ArrayList<Passenger>();
             ArrayList<Point> path = null;
         	
+            
+            
         	// bugbug - we return if not us because the below code is only for when we need a new path or our limo hit a bus stop.
             // if you want to act on other players arriving at bus stops, you need to remove this. But make sure you use Me, not
             // plyrStatus for the Player you are updatiing (particularly to determine what tile to start your path from).
@@ -384,17 +386,17 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 
     					// TODO: Intended for preventing picking up loop
     					// But seems a little bit buggy?
-    					if (passengerHunting != null) {
-    						for (Passenger pp : pickup) {
-    							if (!pp.equals(passengerHunting)) {
-    								ptDest = pp.getLobby().getBusStop();
-    								passengerHunting = pp;
-    							}
-    						}
-    					} else {
+//    					if (passengerHunting != null) {
+//    						for (Passenger pp : pickup) {
+//    							if (!pp.equals(passengerHunting)) {
+//    								ptDest = pp.getLobby().getBusStop();
+//    								passengerHunting = pp;
+//    							}
+//    						}
+//    					} else {
     						ptDest = pickup.get(0).getLobby().getBusStop();
     						passengerHunting = pickup.get(0);
-    					}
+//    					}
     				} else {
     					ptDest = getMe().getLimo().getPassenger().getDestination().getBusStop();
     				}
@@ -412,17 +414,17 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 
     					// TODO: Intended for preventing picking up loop
     					// But seems a little bit buggy?
-    					if (passengerHunting != null) {
-    						for (Passenger pp : pickup) {
-    							if (!pp.equals(passengerHunting)) {
-    								ptDest = pp.getLobby().getBusStop();
-    								passengerHunting = pp;
-    							}
-    						}
-    					} else {
+//    					if (passengerHunting != null) {
+//    						for (Passenger pp : pickup) {
+//    							if (!pp.equals(passengerHunting)) {
+//    								ptDest = pp.getLobby().getBusStop();
+//    								passengerHunting = pp;
+//    							}
+//    						}
+//    					} else {
     						ptDest = pickup.get(0).getLobby().getBusStop();
     						passengerHunting = pickup.get(0);
-    					}
+//    					}
     				} else {
     					ptDest = getMe().getLimo().getPassenger().getDestination().getBusStop();
     				}
