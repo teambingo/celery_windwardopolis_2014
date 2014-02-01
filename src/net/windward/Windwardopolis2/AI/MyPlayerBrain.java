@@ -287,17 +287,17 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 					}
 				}
 
-				if (getMe().getLimo().getPassenger() == null) {
-					pickup = AllPickups(getMe(), getPlayers(), getPassengers());
-					ptDest = pickup.get(0).getLobby().getBusStop();
-					passengerHunting = pickup.get(0);
-				}
+//				if (getMe().getLimo().getPassenger() == null) {
+//					pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+//					ptDest = pickup.get(0).getLobby().getBusStop();
+//					passengerHunting = pickup.get(0);
+//				}
             } else {
                 if(status == PlayerAIBase.STATUS.UPDATE) {
                     MaybePlayPowerUp();
                     
                     
-//                    return;
+                    return;
                 }
 
                 DisplayStatus(status, plyrStatus);
@@ -502,7 +502,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 //
 //            sendOrders.invoke("move", path, pickup);
             
-            DisplayOrders(ptDest);
+//            DisplayOrders(ptDest);
             
             // DMESG
 			String curHuntingDmesg = "HUNTING: " + (passengerHunting != null ? passengerHunting.getName() : "<null>");
@@ -524,7 +524,9 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 					getMe().getLimo().getPath().clear();
 					getMe().getLimo().getPath().addAll(path);
 				}
-
+				
+				System.out.println("Sending PATH!");
+				System.out.println("path: " + path);
 				sendOrders.invoke("move", path, pickup);
 				return;
 			}
@@ -538,7 +540,9 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 					getMe().getLimo().getPath().clear();
 					getMe().getLimo().getPath().addAll(path);
 				}
-
+				
+				System.out.println("Sending DEST!");
+				System.out.println("dest: " + ptDest);
 				sendOrders.invoke("move", path, pickup);
 				return;
 			}
