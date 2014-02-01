@@ -295,7 +295,9 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
             } else {
                 if(status == PlayerAIBase.STATUS.UPDATE) {
                     MaybePlayPowerUp();
-                    return;
+                    
+                    
+//                    return;
                 }
 
                 DisplayStatus(status, plyrStatus);
@@ -447,6 +449,13 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 
     				break;
     			}
+    			
+    			if (getMe().getLimo().getPassenger() == null) {
+    				// No passenger, coffee!!
+    				if (getMe().getLimo().getCoffeeServings() == 0) {
+    					ptDest = getNearestCoffeeStore(getMe()).getBusStop();
+    				}
+                }
 
                 // coffee store override
                 switch (status)
@@ -503,6 +512,24 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
         } catch (RuntimeException ex) {
             ex.printStackTrace();
         }
+    }
+    
+    private CoffeeStore getNearestCoffeeStore(Player me) {
+    	CoffeeStore mcf = null;
+    	for (CoffeeStore cf : getCoffeeStores()) {
+    		if (mcf == null) {
+    			mcf = cf;
+    		} else {
+    			ArrayList<Point> mcfp = CalculatePathPlus1(me, mcf.getBusStop());
+    			ArrayList<Point> cfp = CalculatePathPlus1(me, cf.getBusStop());
+    			
+    			if (cfp.size() < mcfp.size()) {
+    				mcf = cf;
+    			}
+    		}
+    	}
+    	
+    	return mcf;
     }
 
     private void MaybePlayPowerUp() {
