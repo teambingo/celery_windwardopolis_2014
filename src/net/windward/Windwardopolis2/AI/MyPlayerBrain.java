@@ -567,6 +567,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 				
 				System.out.println("Sending PATH!");
 				System.out.println("path: " + path);
+				System.out.println();
 				sendOrders.invoke("move", path, pickup);
 				return;
 			}
@@ -584,6 +585,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 				System.out.println("Sending DEST!");
 				System.out.println("dest: " + ptDest);
 				System.out.println("path: " + path);
+				System.out.println();
 				sendOrders.invoke("move", path, pickup);
 				return;
 			}
