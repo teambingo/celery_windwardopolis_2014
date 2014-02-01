@@ -268,6 +268,18 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
             // if you want to act on other players arriving at bus stops, you need to remove this. But make sure you use Me, not
             // plyrStatus for the Player you are updatiing (particularly to determine what tile to start your path from).
             if (!plyrStatus.equals(getMe())) {
+            	switch (status) {
+            	case PASSENGER_PICKED_UP:
+            		if(plyrStatus.getLimo().getPassenger()!=null && passengerHunting!=null){
+            			if(plyrStatus.getLimo().getPassenger().equals(passengerHunting)){
+            				System.out.println(plyrStatus.getName() + " picked up " + plyrStatus.getLimo().getPassenger().getName());
+            				pickup = AllPickups(getMe(), getPlayers(), getPassengers());
+            				ptDest = pickup.get(0).getDestination().getBusStop();
+            				// DMESG
+            				System.out.println();
+            			}
+            		}
+            	}
             	if (pendingStatus != null) {
 					switch (pendingStatus) {
 					case PASSENGER_REFUSED_ENEMY:
@@ -473,9 +485,14 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
                             break;
                         ptDest = pickup.get(0).getLobby().getBusStop();
                         break;
-                }	
+                }
             }
-
+            if (getMe().getLimo().getPassenger() == null) {
+				// No passenger, coffee!!
+				if (getMe().getLimo().getCoffeeServings() == 0) {
+					ptDest = getNearestCoffeeStore(getMe()).getBusStop();
+				}
+            }
 //            // may be another status
 //            if(ptDest == null)
 //                return;
@@ -502,7 +519,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 //
 //            sendOrders.invoke("move", path, pickup);
             
-//            DisplayOrders(ptDest);
+            DisplayOrders(ptDest);
             
             // DMESG
 			String curHuntingDmesg = "HUNTING: " + (passengerHunting != null ? passengerHunting.getName() : "<null>");
@@ -543,6 +560,7 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
 				
 				System.out.println("Sending DEST!");
 				System.out.println("dest: " + ptDest);
+				System.out.println("path: " + path);
 				sendOrders.invoke("move", path, pickup);
 				return;
 			}
