@@ -658,25 +658,47 @@ public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI 
         {
             if (pu2.getCard() == PowerUp.CARD.MOVE_PASSENGER) {
                 Passenger toUseCardOn = null;
+                
+                Passenger currentPassenger = getMe().getLimo().getPassenger();
+                if (currentPassenger != null) {
+                	List <Passenger> destPassengers = currentPassenger.getDestination().getPassengers();
+                	for (Passenger p : destPassengers) {
+                		if (currentPassenger.getEnemies().indexOf(p) >= 0) {
+                			toUseCardOn = p;
+                			break;
+                		}
+                	}
+                }
+                
+                if (toUseCardOn == null) {
                 for(Passenger pass : privatePassengers) {
                     if(pass.getCar() == null) {
                         toUseCardOn = pass;
                         break;
                     }
                 }
+                }
                 pu2.setPassenger(toUseCardOn);
             }
             if (pu2.getCard() == PowerUp.CARD.CHANGE_DESTINATION || pu2.getCard() == PowerUp.CARD.STOP_CAR)
             {
-                java.util.ArrayList<Player> plyrsWithPsngrs = new ArrayList<Player>();
+                List<Player> plyrsWithPsngrs = new ArrayList<Player>();
                 for(Player play : privatePlayers) {
                     if(play.getGuid() != getMe().getGuid() && play.getLimo().getPassenger() != null) {
                         plyrsWithPsngrs.add(play);
                     }
                 }
+                Collections.sort(plyrsWithPsngrs, new Comparator<Player>() {
+					@Override
+					public int compare(Player o1, Player o2) {
+						return o2.getScore() - o1.getScore() > 0 ? 1 : -1;
+					}
+				});
 
                 if (plyrsWithPsngrs.size() == 0)
                     return;
+                
+                System.out.println("TOP PLAYER: " + plyrsWithPsngrs.get(0).getName());
                 pu2.setPlayer(plyrsWithPsngrs.get(0));
             }
             if (log.isInfoEnabled())
