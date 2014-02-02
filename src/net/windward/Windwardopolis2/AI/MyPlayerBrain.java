@@ -35,7 +35,7 @@ import org.apache.log4j.Logger;
  */
 public class MyPlayerBrain implements net.windward.Windwardopolis2.AI.IPlayerAI {
     // bugbug - put your team name here.
-    private static String NAME = "Mr. Bond";
+    private static String NAME = "Celery";
 
     // bugbug - put your school name here. Must be 11 letters or less (ie use MIT, not Massachussets Institute of Technology).
     public static String SCHOOL = "Purdue U.";
